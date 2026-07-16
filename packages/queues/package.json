@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@github-orbit/config": "workspace:*",
-    "bullmq": "^5.56.0",
+    "bullmq": "^5.80.5",
     "ioredis": "^5.6.0"
   },
   "devDependencies": {

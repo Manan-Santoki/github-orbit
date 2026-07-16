@@ -16,7 +16,7 @@
     "@github-orbit/integrations": "workspace:*",
     "@github-orbit/queues": "workspace:*",
     "@tanstack/react-query": "^5.81.0",
-    "bullmq": "^5.56.0",
+    "bullmq": "^5.80.5",
     "drizzle-orm": "^0.44.0",
     "graphology": "^0.26.0",
     "graphology-communities-louvain": "^2.0.2",
