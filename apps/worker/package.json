@@ -16,7 +16,7 @@
     "@github-orbit/integrations": "workspace:*",
     "@github-orbit/queues": "workspace:*",
     "bullmq": "^5.56.0",
-    "drizzle-orm": "^0.44.0",
+    "drizzle-orm": "^0.45.2",
     "ioredis": "^5.6.0",
     "pg": "^8.16.0"
   },
