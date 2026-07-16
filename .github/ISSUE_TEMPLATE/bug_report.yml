@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a reproducible problem in GitHub Orbit
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include OAuth tokens, cookies, `.env` contents, private notes, or database exports.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Start Orbit with…
+        2. Open…
+        3. Click…
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Version or commit
+      placeholder: main or a commit SHA
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Runtime mode
+      options:
+        - Connected mode
+        - Demo mode
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, browser, Node version, and Docker version when relevant.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      render: shell

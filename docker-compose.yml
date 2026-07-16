@@ -1,0 +1,147 @@
+name: github-orbit
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      CADDY_DOMAIN: ${CADDY_DOMAIN:-localhost}
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+    networks: [edge, private]
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      target: web
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-orbit}:${POSTGRES_PASSWORD:-orbit}@postgres:5432/${POSTGRES_DB:-orbit}
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3010}:3000"
+    expose: ["3000"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks: [private, egress]
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      target: worker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-orbit}:${POSTGRES_PASSWORD:-orbit}@postgres:5432/${POSTGRES_DB:-orbit}
+      REDIS_URL: redis://redis:6379
+    healthcheck:
+      test: ["CMD", "node", "/app/apps/worker/dist/health.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks: [private, egress]
+
+  migrate:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      target: tools
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-orbit}:${POSTGRES_PASSWORD:-orbit}@postgres:5432/${POSTGRES_DB:-orbit}
+    command: ["pnpm", "db:migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [private]
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-orbit}
+      POSTGRES_USER: ${POSTGRES_USER:-orbit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-orbit}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-orbit} -d ${POSTGRES_DB:-orbit}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [private]
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [private]
+
+  backup:
+    image: prodrigestivill/postgres-backup-local:17
+    restart: unless-stopped
+    profiles: ["backup"]
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-orbit}
+      POSTGRES_USER: ${POSTGRES_USER:-orbit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-orbit}
+      SCHEDULE: "0 3 * * *"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      HEALTHCHECK_PORT: 8080
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [private]
+
+networks:
+  edge:
+  egress:
+  private:
+    internal: true
+
+volumes:
+  postgres_data:
+  redis_data:
+  caddy_data:
+  caddy_config:

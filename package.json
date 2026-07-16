@@ -1,0 +1,38 @@
+{
+  "name": "github-orbit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A self-hosted GitHub follower graph and explainable people recommendation engine.",
+  "license": "MIT",
+  "homepage": "https://github.com/Manan-Santoki/github-orbit#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Manan-Santoki/github-orbit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Manan-Santoki/github-orbit/issues"
+  },
+  "packageManager": "pnpm@10.26.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @github-orbit/web dev",
+    "dev:worker": "pnpm --filter @github-orbit/worker dev",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "pnpm -r --if-present lint",
+    "test": "pnpm -r --if-present test",
+    "db:migrate": "pnpm --filter @github-orbit/db migrate",
+    "db:seed": "pnpm --filter @github-orbit/db seed",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "prettier": "^3.5.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
